@@ -26,7 +26,8 @@ contract FuncModifier {
     // Important: The _; in a modifier is required because it tells Solidity where the actual function code should run.
     // If you forget it, the function will not execute correctly.
 
-    // The function code runs where _; is placed inside the modifier (usually after the checks, but can be before or after depending on placement).
+    // Modifiers can be called before and / or after a function.
+    // Meaning that the  function code runs where _; is placed inside the modifier (usually after the checks, but can be before or after depending on placement).
     // In the case below, the function will run the modifier code, and then will run the code within the function.
 
     // Modifier to check that the caller is the owner of the contract.
@@ -49,21 +50,31 @@ contract FuncModifier {
     function changerOwner(address _newOwner) public onlyOwner validAddress (_newOwner){
         owner = _newOwner; // Updates the owner to the new address.
     }
-    // Important: The fucntion will NOT run twice. It will take 1st modifier, then 2nd modifier
-    // Then run the function code
+
+    /*
+    This is our code without modifiers if onlyOwner and validAddress were functions
+    function changeOwner(address _newOwner) public {
+        onlyOwner();
+        validAddress(_newOwner);
+
+        owner = _newOwner;
+    }
+    */
 
 
-    // Modifiers can be called before and / or after a function.
+    // Reentrancy guard (reentrancy hack)
+
     // This modifier prevents a function from being called while it is still executing.
     modifier noReentrancy() { // Defines a modifier to prevent reentrancy attacks.
-        require(!locked, "Locked"); // Checks that the contract is not already in a locked state.
+        require(!locked, "Locked"); // Make sure that the contract is NOT already in a locked state (== false).
 
         locked = true; // Locks the contract before executing the function.
         _; // Executes the function body.
         locked = false; // Unlocks the contract after execution.
     }
 
-    function decrement(uint i) public  {
+    // Using noReentrancy will break this function and blocks all re-entry including own recursive internal call
+    function decrement(uint i) public noReentrancy {
         x -= 1; // Decreases the value of x by 1.
 
         if (i > 1) {
@@ -72,3 +83,56 @@ contract FuncModifier {
         }
     }
 }
+
+/*
+
+🔹 Important: Modifiers are applied in order but executed as nested wrappers like: A wraps ( B wraps ( function ) ),
+and the function body runs where _; is placed in each modifier and the execution is like:
+    A {
+         B {
+             changerOwner
+        }
+     }
+
+Or in a simple steps:
+    1. A enters
+    2. → B enters
+    3. → function runs
+    4. → B exits
+    5. → A exits
+
+🔹 Execution depends on _;
+
+    Modifiers are not strictly executed top-to-bottom.
+    Their behavior depends on where "_;" is placed.
+
+    If modifiers change, execution flow also changes.
+
+Example:
+
+    modifier A {
+        _;
+        // runs AFTER function
+    }
+
+    modifier B {
+        // runs BEFORE function
+        _;
+    }
+
+    function foo() public A B { }
+
+Execution flow becomes:
+
+    B (before)
+    → function body
+    → A (after)
+
+
+🔹 The real rule:
+
+- Modifiers are nested wrappers around the function
+- _; defines where the function body executes
+- Execution order is NOT strictly linear
+- It behaves like function wrapping, not sequential execution
+*/
