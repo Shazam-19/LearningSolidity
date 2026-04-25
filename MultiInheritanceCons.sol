@@ -11,7 +11,7 @@ Covers:
   NOT by the order in which constructors are listed in the child
 */
 
-// Parent contract X
+// Parent/Base contract X
 contract X {
     event Log(string message);
     string public name;
@@ -24,7 +24,7 @@ contract X {
     }
 }
 
-// Parent contract Y
+// Parent/Base contract Y
 contract Y {
     event Log(string message);
     string public text;
@@ -38,6 +38,8 @@ contract Y {
 }
 
 /*
+There are 2 ways to initialize parent contract with parameters.
+
 Method 1: Passing fixed arguments directly in inheritance
 
 - Arguments are hardcoded at the time of inheritance
@@ -56,7 +58,7 @@ Method 2: Passing fixed arguments via the child constructor
 */
 contract C is X, Y {
     constructor() X("Fixed Input") Y("Another Fixed Input") public {
-
+    // Passing the parameters here in the inheritance list.
     }
 }
 
@@ -74,9 +76,16 @@ contract D is X, Y {
 */
 
 
-// Method 3 (Version 2):
-// Method 3.2: Passing different dynamic inputs to each parent
-// Values are provided at deployment time
+/*
+Method 3 (Version 2):
+Method 3.2: Passing different dynamic inputs to each parent
+Values are provided at deployment time
+This is similar to function modifiers.
+Order of constructors called:
+1. X
+2. Y
+3. D
+*/
 contract D is X, Y {
     constructor(string memory _name, string memory _text) X(_name) Y(_text) public {
     
@@ -86,8 +95,8 @@ contract D is X, Y {
 /*
 Constructor Execution Order:
 
-- Constructors are executed in the order of inheritance (left → right)
-- NOT based on the order in which they are called in the constructor
+- Parent constructors are executed in the order of inheritance (left → right)
+- NOT based on the order in which they are called in the constructor of the child contract.
 
 For both E and F:
 - Inheritance is: X, Y
@@ -96,10 +105,18 @@ For both E and F:
   2. Y constructor
 */
 
+// Order of constructors called:
+// 1. X
+// 2. Y
+// 3. E
 contract E is X, Y {
     constructor() X("X Was Called") Y("Y Was Called") public {}
 }
 
+// Order of constructors called:
+// 1. X
+// 2. Y
+// 3. F
 contract F is X, Y {
     constructor() Y("Y Was Called") X("X Was Called") public {}
 }
