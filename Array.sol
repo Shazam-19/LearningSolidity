@@ -51,13 +51,10 @@ contract Array {
         return arr.length;
     }
 
-    // ⚠️ Does NOT reduce array length, ONLY deletes the element at a given index
+    // ⚠️ Does NOT either reduce array length or remove elements.
     // Instead, it resets the value at that index to the default (0 for uint256)
     function remove(uint256 index) public {
         delete arr[index];
-
-        // Note: we can get the value stored in a specific index in a specific array using arr[index]
-        // this is the same index
     }
 
     // Alternative array for demonstrating compact removal, by copying the last element
@@ -66,7 +63,7 @@ contract Array {
 
     // Removes an element by replacing it with the last element
     // Then removes the last element to keep the array compact
-    // ⚠️ This method does NOT preserve order
+    // ⚠️ This method does NOT preserve order but it's efficient (O(1))
     function removeCompact(uint256 index) public {
         compactArray[index] = compactArray[compactArray.length - 1];
         compactArray.pop();
@@ -105,26 +102,69 @@ contract Array {
     }
 
     
-    // Example of creating arrays in memory (temporary, not stored on-chain)
+    // Advanced: Example of creating arrays in memory (temporary, not stored on-chain), that:
+    // - Exist only during function execution
+    // - Cheaper than storage
+    // - Only fixed size can be created in memory
 
     function examples() external pure {
-        // create array in memory, only fixed size can be created
+
+        // Create a dynamic-type array in memory with fixed length = 5
+        // All values are initialized to 0 by default
+        // a = [0, 0, 0, 0, 0]
         uint256[] memory a = new uint256[](5);
 
         // create a nested array / 2D array (array of arrays) in memory
-        // b = [[1, 2, 3], [4, 5, 6]]
-        uint256[][] memory b = new uint256[][](2);
+        // Think of this like a table (rows and columns)
+        // Create outer array with length = 2
+        // At this point:
+        // b = [empty, empty]
+        // (inner arrays are not created yet)
+        uint256[][] memory b = new uint256[][](2); // It's mandatory to define array size when creating it in memeory
+
+        // 📌 IMPORTANT:
+        // Each element of `b` is itself an array, but currently uninitialized
+        // We must create each inner array manually as in the function below...
+
 
         // Initialize inner arrays
         for (uint256 i = 0; i < b.length; i++) {
+
+            // For each index in outer array:
+            // Create an inner array with length = 3
             b[i] = new uint256[](3);
+
+            // After loop:
+            // b = [
+            //   [0, 0, 0],
+            //   [0, 0, 0]
+            // ]
         }
+
+        // 📌 Assign values manually
+
+        // First row
         b[0][0] = 1;
         b[0][1] = 2;
         b[0][2] = 3;
+
+        // Second row
         b[1][0] = 4;
         b[1][1] = 5;
         b[1][2] = 6;
     }
     
+    // Final structure of b:
+    // b = [
+    //   [1, 2, 3],
+    //   [4, 5, 6]
+    // ]
+
+    /*
+    Why did we write the b implementation like that?
+    Because 2D arrays = arrays inside arrays, so we must:
+    1. Create outer array
+    2. Then create each inner array
+    3. Then assign values
+    */
 }
