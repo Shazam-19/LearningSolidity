@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import "./EnumDeclaration.sol"; // Here we import the other file enum accountStatus
+
 contract Order {
 
     // Enum representing the lifecycle of an order
@@ -17,6 +19,10 @@ contract Order {
     // Current order status
     // Defaults to the first enum value → Pending
     Status public status;
+
+    // Current account status
+    // Defaults to the first enum value → Inactive
+    accountStatus public accStat; 
 
     // Mark the order as shipped
     function ship() public {
@@ -47,7 +53,7 @@ contract Order {
     function cancel() public {
         // Only allow cancellation if order is still pending
         require(status == Status.Pending);
-        
+
         status = Status.Canceled;
     }
 }
