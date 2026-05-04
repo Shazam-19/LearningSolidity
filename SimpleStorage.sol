@@ -73,7 +73,14 @@ contract SimpleStorage {
         return favNum;
     }
 
+
     // Add a new Person to the dynamic array `listOfPeople`
+
+    // In Solidity, reference types like strings, arrays, and structs require
+    // an explicit data location (memory, calldata, or storage) in function parameters and
+    // return values, while state variables default to storage. 
+    // Mappings can only exist in storage and have additional restrictions.
+
     function addPerson(string memory _name, uint256 _favNum) public {
         // Create a new Person struct in memory and push it to storage
         // Execution order:
@@ -83,3 +90,66 @@ contract SimpleStorage {
         listOfPeople.push(Person({personFavNum: _favNum, name: _name}));
     }
 }
+
+/*
+The EVM can read and write to several places (easier edition)
+
+Write & Read:
+- Stack
+- Memory
+- Storage
+- Calldata
+
+Write (not read):
+- Logs
+
+Read (not write):
+- Chain Data
+
+===========================================================================
+
+In Solidity, there are 3 main data locations: storage, memory, and calldata.
+
+STORAGE
+- Permanent data stored on the blockchain.
+- Think of it like a database that keeps data forever.
+- Expensive to read/write because it costs gas.
+- Used for state variables (variables declared outside functions).
+
+uint256 public storedValue; // lives in storage
+
+function setValue(uint256 _value) public {
+    storedValue = _value; // writing to storage (costly)
+}
+
+
+MEMORY
+- Temporary data that exists only during function execution.
+- Can be altered/modified dueing the function call
+- Cleared after the function finishes.
+- Cheaper than storage.
+- Used for variables inside functions, especially arrays/structs.
+
+function useMemory() public pure returns (uint256) {
+    uint256 temp = 10; // stored in memory
+    return temp;
+}
+
+
+CALLDATA
+- Read-only data passed into functions (external calls).
+- Cannot be modified.
+- Cheapest data location.
+- Used for function parameters, especially in external functions.
+
+function useCalldata(uint256[] calldata data) external pure returns (uint256) {
+    // data is read-only, cannot change it
+    return data[0];
+}
+
+QUICK SUMMARY:
+- storage  = permanent, expensive, blockchain data
+- memory   = temporary, modifiable, exists during function call
+- calldata = temporary, read-only, cheapest, used for inputs
+
+*/
