@@ -88,3 +88,11 @@ contract SendToFallback {
 
     }
 }
+
+/*
+Real-world usage
+- Upgradeable contracts
+- Proxy contracts
+- ETH receivers (donations, vaults)
+- Handling unexpected calls
+*/
