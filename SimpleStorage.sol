@@ -54,6 +54,10 @@ contract SimpleStorage {
 
     // Dynamic Array
     Person[] public listOfPeople; // []
+    
+    // Ben -> 5
+    mapping(string => uint256) public nameToFavNum;
+
 
     // Update the stored favorite number
     function store(uint256 _favNum) public {
@@ -88,6 +92,8 @@ contract SimpleStorage {
         // 2. Pass it into push()
         // 3. Store it in the array
         listOfPeople.push(Person({personFavNum: _favNum, name: _name}));
+
+        nameToFavNum[_name] = _favNum;
     }
 }
 
