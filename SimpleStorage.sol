@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
+// pragma solidity >=0.8.0 <0.9.0;
+
 
 /*
 Basic Types & Storage Example
@@ -33,15 +35,22 @@ contract SimpleStorage {
     // "cat" is stored as bytes and padded with zeros
     bytes32 favBytes32 = "cat"; // 0x6361740000000000000000000000000000000000000000000000000000000000
 
-    // Static Array
+    // Fixed-size (static) array (length = 3)
+    // Cannot grow or shrink; all elements default to 0
     uint256[3] listOfFavNums;
 
+    // Struct to represent a person and their favorite number
     struct Person {
-        uint256 personFavNum;
-        string name;
+        uint256 personFavNum; // Favorite number of the person
+        string name;          // Name of the person
     }
 
-    Person public myFriend = Person({personFavNum: 7, name: "Mai"});
+    // Initialize a struct using named arguments (key-value style)
+    // Order of fields does not matter when using this syntax
+    Person public myFriend = Person({
+        personFavNum: 7,
+        name: "Mai"
+    });
 
     // Dynamic Array
     Person[] public listOfPeople; // []
@@ -64,8 +73,13 @@ contract SimpleStorage {
         return favNum;
     }
 
+    // Add a new Person to the dynamic array `listOfPeople`
     function addPerson(string memory _name, uint256 _favNum) public {
-        // Solidity will execute the line from inwards to outwerwards
+        // Create a new Person struct in memory and push it to storage
+        // Execution order:
+        // 1. Create struct Person({...})
+        // 2. Pass it into push()
+        // 3. Store it in the array
         listOfPeople.push(Person({personFavNum: _favNum, name: _name}));
     }
 }
