@@ -9,8 +9,8 @@ The fallback function is a special function that's executed when:
    - msg.data is NOT empty
 
 Fallback function:
-- transfer/send → forward 2300 gas (very limited)
-- call → forwards all gas (default)thod
+- transfer/send → forward 2300 gas (very limited as it can't write to storage or call another contract with this gas amount)
+- call → forwards all gas (default)
 
 It’s not recommended to include extensive logic inside the fallback function,
 since operations like transfer and send can fail.
@@ -56,7 +56,7 @@ contract Fallback {
     }
 
 
-    // Returns the Ether balance of this contract
+    // Helper function that returns the Ether balance of this contract
     function getBalance() public view returns (uint256) {
 
         return address(this).balance;
@@ -87,6 +87,39 @@ contract SendToFallback {
         require(sent, "Failed to send Ether");
 
     }
+
+
+    /* 
+    Sends Ether with arbitrary non-empty calldata ("0x1234"), resulting in:
+    - Since msg.data is NOT empty, this will trigger fallback() on the receiver
+    (if it exists), otherwise the transaction may revert
+    - Forwards all remaining gas by default
+    */
+    function callWithData(address payable _to) public payable {
+
+        // Low-level call with custom data payload
+        (bool sent, ) = _to.call{value: msg.value}("0x1234");
+        
+        require(sent, "Failed to send Ether");
+    }
+
+
+    /* 
+    Calls a function that does NOT exist on the target contract, resulting in:
+    - The encoded signature "doesNotExist()" will not match any function
+    - This forces execution of fallback() on the receiving contract
+    - Useful for testing fallback behavior
+    */
+    function callNonExisting(address payable _to) public payable {
+        
+        // Encode a non-existent function signature and send it via call
+        (bool sent, ) = _to.call{value: msg.value}(
+            abi.encodeWithSignature("doesNotExist()")
+        );
+
+        require(sent, "Call failed");
+    }
+
 }
 
 /*
