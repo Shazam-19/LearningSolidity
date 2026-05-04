@@ -29,11 +29,11 @@ contract Fallback {
 
     /*
     fallback():
-    - Called when:
-        • Function does not exist
-        • OR msg.data is not empty
     - Must be 'external'
     - Must be 'payable' to receive Ether
+    - Called when:
+        • Calling a function that does not exist in the contract we sent the transaction to
+        • OR msg.data is not empty A.K.A sending Ether with data to call functions in other contracts
     */
     fallback() external payable {
 
@@ -45,10 +45,10 @@ contract Fallback {
 
     /*
     receive():
+    - Preferred way to receive plain Ether transfers
     - Called when:
         • Ether is sent
-        • AND msg.data is empty
-    - Preferred way to receive plain Ether transfers
+        • AND msg.data is empty A.K.A sending Ether transaction only without data
     */    receive() external payable {
 
         emit Log("receive", gasleft());
@@ -74,6 +74,7 @@ contract SendToFallback {
         _to.transfer(msg.value);
 
     }
+
 
     // Sends Ether using call()
     function callFallback(address payable _to) public payable {
