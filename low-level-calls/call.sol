@@ -67,12 +67,13 @@ contract Caller {
 
 
     /*
-    Calls the `foo` function on another contract using low-level call
+    Calls the `foo` function on another contract using a low-level call
 
     Key Points:
-    - We manually encode the function signature using ABI encoding
-    - We send Ether along with the call
-    - We optionally limit gas usage
+    - Function signature is manually encoded using ABI encoding
+    - Ether can be sent along with the call
+    - Gas limit can be explicitly specified
+    - Low-level calls do not enforce function existence or return types
     */
     function textCallFoo(address payable _address) public payable {
         
@@ -81,8 +82,16 @@ contract Caller {
         (bool success, bytes memory data) = _address.call{
             value: msg.value,
             gas: 5000
+            // Note: Spaces inside the function signature do NOT matter
+            // e.g. "foo(string,uint256)" == "foo(string, uint256)"
         }(abi.encodeWithSignature("foo(string,uint256)", "call foo", 123));
 
+        // The return value of foo(uint256) is encoded in `data` (bytes)
+        // It must be decoded manually to use it
+
+        // The responce 'data' will give us (after foo() returns) this hexadecimal value:
+        // 0x000000000000000000000000000000000000000000000000000000000000007c
+        // Which corresponds to 124 (123 + 1) in decimal
         emit Responce(success, data);
     }
 
@@ -93,14 +102,19 @@ contract Caller {
     Behavior:
     - Since function does not exist, fallback() is triggered on receiver
     - No compile-time validation of function existence
+    - We don't have to send Ether when sending the call method, so we removed 'payable'
+    from the function argument and visibility
     */
-    function testCallDoesNotExist(address payable _address) public payable {
+    function testCallDoesNotExist(address _address) public {
         
-        // You can send ether and specify a custom gas amount
-        (bool success, bytes memory data) = _address.call{value: msg.value}(
+        // This will trigger the fallback function since we don't have 'doesNotExist()'
+        // Fallback() does not return any outputs, so 'data' will be 0 bytes
+        (bool success, bytes memory data) = _address.call(
             abi.encodeWithSignature("doesNotExist()")
         );
 
+        // The responce 'data' will give us (after fallback() returns) this hexadecimal value: 0x
+        // which is basically 0 bytes
         emit Responce(success, data);
     }
 }
