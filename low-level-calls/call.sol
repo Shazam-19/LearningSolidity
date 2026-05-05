@@ -16,6 +16,11 @@ Use cases:
 
 ⚠️ Best Practice:
 Avoid using `call` unless necessary, as it bypasses compile-time checks.
+
+Few reasons why low-level call is not recommended:
+- Reverts are not bubbled up
+- Type checks are bypassed
+- Function existence checks are omitted
 */
 
 contract Reciever {
