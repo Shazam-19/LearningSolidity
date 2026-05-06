@@ -108,3 +108,15 @@ contract A {
     }
 
 }
+
+/*
+Final Analogy:
+
+call:
+- You send a task to another contract.
+- That contract executes it and updates its own state.
+
+delegatecall:
+- You import another contract's logic.
+- It executes as if it were your own code and updates your state.
+*/
