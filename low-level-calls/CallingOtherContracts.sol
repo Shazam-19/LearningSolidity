@@ -68,7 +68,6 @@ contract Callee {
 
 
 
-
 contract Caller {
 
     // Calls setX() using a contract instance.
@@ -79,13 +78,14 @@ contract Caller {
 
     // Calls setX() using a contract address.
     // Useful when only the deployed contract address is known.
+    // So, it uses a raw contract address and converts it into a Callee contract instance.
     function setXFromAddress(address _addr, uint256 _x) public {
 
         // Create a Callee contract object for the given address
         Callee callee = Callee(_addr);
 
         // Call function on the target contract
-        callee.setX(_x);
+        uint256 x = callee.setX(_x);
     }
 
     // Calls setXandSendEther() and forwards ETH.
@@ -100,3 +100,32 @@ contract Caller {
     }
 }
 
+/* 
+NOTE:
+Converting an address into a Callee contract type does NOT verify
+that the address actually belongs to a Callee contract.
+
+Solidity simply assumes the target address implements the expected functions.
+If another contract (like Foo) has the same function signature,
+its code will be executed instead.
+
+
+IMPORTANT:
+Solidity does not verify that the address actually belongs to a Callee contract.
+If we pass different contract address (like Foo) which has a function with the same signature,
+the call will still succeed and execute Foo's code instead of Callee's code.
+
+This means we might think we are calling Callee.setX(),
+but in reality another contract's implementation could be executed.
+*/
+
+contract Foo {
+
+    uint256 public x;
+
+    function setX(uint _x) public returns (uint256) {
+        x = _x + 1;
+
+        return 0;
+    }
+}
