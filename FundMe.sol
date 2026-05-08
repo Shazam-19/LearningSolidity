@@ -11,11 +11,12 @@ Purpose:
 - Allow funds to be withdrawn later
 */
 
-// Import Chainlink price feed interface
-// Used to fetch the ETH/USD price on-chain
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {PriceConverter} from "./PriceConverter.sol";
 
 contract FundMe {
+
+    // Enable all uint256 values (like 'msg.value') to use functions from the PriceConverter library.
+    using PriceConverter for uint256;
 
     // Example state variable
     uint256 public myValue = 1;
@@ -24,7 +25,7 @@ contract FundMe {
     // This value is currently compared directly against msg.value (Wei),
     // not actual USD. A price feed would be needed for real USD conversion.
     // We updated the number so that it doesn't be just 5 since getConversionRate return a number
-    // with an 18 decimal or we can just write it as '5 * 1e18' or '5 * (10**18)'
+    // with an 18 decimal. We can just declare it as '5 * 1e18' or '5 * (10**18)'
     uint256 public minimumUSD = 5 * 1e18; // Minimum amount required to fund the contract
 
     // Keep track of everyone's addresses who will send money to this contract
@@ -41,11 +42,14 @@ contract FundMe {
         // Example state update
         // This change will revert if require() below fails
         myValue += 2;
-        
+
+        // Here, msg.value is automatically passed as the first argument
+        // to getConversionRate() through the PriceConverter library.        
+        /* msg.value.getConversionRate();*/
         
         // Convert sent ETH into USD value and verify minimum amount.
         // msg.value = amount of ETH sent in Wei since 1 ETH = 1e18 Wei
-        require(getConversionRate(msg.value) >= minimumUSD, "ETH amount is below the minimum requirement."); // 1e18 = 1 ETH = 1,000,000,000,000,000,000 Wei = 1 * 10^18 Wei
+        require(msg.value.getConversionRate() >= minimumUSD, "ETH amount is below the minimum requirement."); // 1e18 = 1 ETH = 1,000,000,000,000,000,000 Wei = 1 * 10^18 Wei
         
         // Store funder address
         funders.push(msg.sender);
@@ -73,59 +77,4 @@ contract FundMe {
     }
 
     
-    // Returns the latest ETH/USD price from Chainlink.
-    // Return value uses 18 decimals for consistency.
-    function getPrice() public view returns (uint256) {
-        // We want to contract another contract so what do we need?
-        // Address - 0x694AA1769357215DE4FAC081bf1f309aDC325306
-        // ABI (provided through the imported interface)
-
-        // Sepolia ETH / USD Address
-        // Docs: https://docs.chain.link/data-feeds/price-feeds/addresses
-        AggregatorV3Interface priceFeed = 
-                AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
-
-        // Since we don't need all these returned data below, we can just remove them and leave a ','
-        // (uint80 roundID, int256 price, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
-        (, int256 price,,,) = priceFeed.latestRoundData();
-
-        /*
-        Chainlink ETH/USD price feed returns 8 decimals.
-
-        Example:
-        2000.00000000 = 200000000000
-
-        Multiply by 1e10 to convert from 8 decimals to 18 decimals.
-        */
-        return uint256(price * 1e10);
-
-        // Solidity does not support floating-point numbers, so decimal precision must be handled manually.
-
-    }
-
-
-    /*
-    Converts an ETH amount into its USD value.
-
-    Example:
-        How much is 1 ETH?
-        Answer: 2000_000000000000000
-        (2000_000000000000000 * 1_000000000000000000) / 1e18;
-        $2000 = 1 ETH
-    */
-    function getConversionRate(uint256 ethAmount) 
-        public
-        view
-        returns (uint256) {
-
-        // Fetch ETH price in USD (18 decimals)
-        uint256 ethPrice = getPrice();
-
-        // 1000000000000000000 * 1000000000000000000 = 1000000000000000000000000000000000000
-        // 1000000000000000000000000000000000000 / 18 = 1000000000000000000
-        // Always multiply before dividing to reduce precision loss.
-        uint256 ethAmountInUSD = (ethPrice * ethAmount) / 1e18;
-
-        return ethAmountInUSD;
-    }
 }
