@@ -55,7 +55,7 @@ contract FundMe {
         funders.push(msg.sender);
 
         // Update amount funded by this sender
-        addressToAmountFunded[msg.sender] = addressToAmountFunded[msg.sender] + msg.value;
+        addressToAmountFunded[msg.sender] += msg.value;
 
         /*
         What does revert do?
@@ -71,9 +71,19 @@ contract FundMe {
     }
 
 
-    // Placeholder function for withdrawing contract funds
-    function withdraw() public {
+        // Withdraws all funded amounts by resetting each funder's balance.
+        // Iterates through the funders array and sets every funded amount to 0.    
+        function withdraw() public {
 
+        // Loop through all funders
+        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+
+            // Get funder address at current index
+            address funder = funders[funderIndex];
+
+            // Reset funded amount for this address
+            addressToAmountFunded[funder] = 0;
+        }
     }
 
     
