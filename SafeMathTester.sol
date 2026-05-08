@@ -39,6 +39,10 @@ Solidity >= 0.8.0:
 - Transactions revert on overflow by default.
 
 To disable overflow checks, use 'unchecked'.
+This word allows developers to bypass built-in overflow checks, 
+potentially improving gas efficiency but increasing the risk of errors.
+
+
 */
 
 contract SafeMathTester {
