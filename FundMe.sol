@@ -34,6 +34,13 @@ contract FundMe {
     // Track how much ETH each address funded
     mapping(address funder => uint256 amountFunded) public addressToAmountFunded;
 
+    address public owner;
+
+    // Called when the contract is deployed
+    // So that only the owner of the contract can use the withdraw function
+    constructor () {
+        owner = msg.sender;
+    }
     
     // Allows users to fund the contract with ETH.
     // Requirements: Sent ETH must be worth at least minimumUSD.
@@ -71,9 +78,9 @@ contract FundMe {
     }
 
 
-        // Withdraws all funded amounts by resetting each funder's balance.
-        // Iterates through the funders array and sets every funded amount to 0.    
-        function withdraw() public {
+    // Withdraws all funded amounts by resetting each funder's balance.
+    // Iterates through the funders array and sets every funded amount to 0.    
+    function withdraw() public onlyOwner {
 
         // Loop through all funders
         for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
@@ -95,6 +102,8 @@ contract FundMe {
         //    b) send (2300 gas, returns bool)
         //    c) call (forward all gas or set gas, returns a bool & bytes object)
 
+        /*
+
         // a)
         // 'msg.sender' = address - we can't send ETH
         // 'payable(msg.sender)' = payable address - we can send ETH 
@@ -105,6 +114,10 @@ contract FundMe {
         // - Returns false if failed
         bool sendSuccess = payable(msg.sender).send(address(this).balance); // Here we will transfer/withdraw all balance
         require(sendSuccess, "Failed to Send ETH to the Address");
+
+
+        */
+
 
         // c) 
         // Since we don't care about calling any functions in this 'call',
@@ -119,5 +132,10 @@ contract FundMe {
             - ETH is simply transferred
             */
             require(callSuccess, "Failed to Send ETH to the Address");
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Must be Owner to be able to Withdraw");
+        _;
     }
 }
