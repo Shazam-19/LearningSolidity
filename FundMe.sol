@@ -83,8 +83,41 @@ contract FundMe {
 
             // Reset funded amount for this address
             addressToAmountFunded[funder] = 0;
-        }
-    }
 
-    
+        }
+
+        // We still need to:
+        // 1. Reset the array
+        funders = new address[](0);
+
+        // 2. Actually withdraw ALL the funds. There are 3 ways to do this:
+        //    a) transfer (2300 gas, throws error)
+        //    b) send (2300 gas, returns bool)
+        //    c) call (forward all gas or set gas, returns a bool & bytes object)
+
+        // a)
+        // 'msg.sender' = address - we can't send ETH
+        // 'payable(msg.sender)' = payable address - we can send ETH 
+        payable(msg.sender).transfer(address(this).balance); // Here we will transfer/withdraw all balance
+
+        // b)
+        // - Returns true if successful
+        // - Returns false if failed
+        bool sendSuccess = payable(msg.sender).send(address(this).balance); // Here we will transfer/withdraw all balance
+        require(sendSuccess, "Failed to Send ETH to the Address");
+
+        // c) 
+        // Since we don't care about calling any functions in this 'call',
+        // we will ignore the returned data bytes and just leave the returned bool
+        /* (bool callSuccess, bytes memory dataReturned)*/
+        (bool callSuccess, ) = 
+            payable(msg.sender).call{value: address(this).balance}(""); // Here we will transfer/withdraw all balance
+            /*
+            Empty string "" means:
+            - No calldata
+            - No function is being called
+            - ETH is simply transferred
+            */
+            require(callSuccess, "Failed to Send ETH to the Address");
+    }
 }
