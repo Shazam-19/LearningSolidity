@@ -150,4 +150,15 @@ contract FundMe {
         }
         _;
     }
+
+    // Handle ETH sent directly to the contract
+    // without calling the fund function explicitly
+    receive() external payable {
+        fund();
+    }
+
+    // Called when the function does not exist or when calldata is not empty.
+    fallback() external payable {
+        fund();
+    }
 }
