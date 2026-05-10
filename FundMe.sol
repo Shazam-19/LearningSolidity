@@ -26,7 +26,9 @@ contract FundMe {
     // not actual USD. A price feed would be needed for real USD conversion.
     // We updated the number so that it doesn't be just 5 since getConversionRate return a number
     // with an 18 decimal. We can just declare it as '5 * 1e18' or '5 * (10**18)'
-    uint256 public minimumUSD = 5 * 1e18; // Minimum amount required to fund the contract
+    uint256 constant public MINIMUM_USD = 5 * 1e18; // Minimum amount required to fund the contract
+    // Using `constant` saves gas because the value is fixed at compile time
+    // Constant variables are conventionally written in uppercase letters
 
     // Keep track of everyone's addresses who will send money to this contract
     address[] public funders;
@@ -34,16 +36,17 @@ contract FundMe {
     // Track how much ETH each address funded
     mapping(address funder => uint256 amountFunded) public addressToAmountFunded;
 
-    address public owner;
+    // Variable assigned once during contract deployment - This will save much more gas than without 'immutable'
+    address public immutable i_owner;
 
     // Called when the contract is deployed
     // So that only the owner of the contract can use the withdraw function
     constructor () {
-        owner = msg.sender;
+        i_owner = msg.sender;
     }
     
     // Allows users to fund the contract with ETH.
-    // Requirements: Sent ETH must be worth at least minimumUSD.
+    // Requirements: Sent ETH must be worth at least MINIMUM_USD.
     function fund() public payable {
 
         // Example state update
@@ -56,7 +59,7 @@ contract FundMe {
         
         // Convert sent ETH into USD value and verify minimum amount.
         // msg.value = amount of ETH sent in Wei since 1 ETH = 1e18 Wei
-        require(msg.value.getConversionRate() >= minimumUSD, "ETH amount is below the minimum requirement."); // 1e18 = 1 ETH = 1,000,000,000,000,000,000 Wei = 1 * 10^18 Wei
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "ETH amount is below the minimum requirement."); // 1e18 = 1 ETH = 1,000,000,000,000,000,000 Wei = 1 * 10^18 Wei
         
         // Store funder address
         funders.push(msg.sender);
@@ -135,7 +138,7 @@ contract FundMe {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Must be Owner to be able to Withdraw");
+        require(msg.sender == i_owner, "Must be Owner to be able to Withdraw");
         _;
     }
 }
