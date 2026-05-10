@@ -13,6 +13,8 @@ Purpose:
 
 import {PriceConverter} from "./PriceConverter.sol";
 
+error NotOwner(); // Custom error for unauthorized access
+
 contract FundMe {
 
     // Enable all uint256 values (like 'msg.value') to use functions from the PriceConverter library.
@@ -138,7 +140,14 @@ contract FundMe {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == i_owner, "Must be Owner to be able to Withdraw");
+        // require(msg.sender == i_owner, "Must be Owner to be able to Withdraw");
+
+        // Revert if the caller is not the contract owner
+        // Using a custom error is more gas-efficient than using a require statement
+        // with a long revert string because the string does not need to be stored.
+        if (msg.sender != i_owner) { 
+            revert NotOwner();
+        }
         _;
     }
 }
